@@ -38,7 +38,8 @@ export default function StreakCalendar({
 
   const toggleDay = (day: number) => {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
-    const dateStr = date.toISOString().split("T")[0]
+    // Fix: Use local date formatting to match the calendar display
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
     onToggleDay(dateStr)
   }
 
@@ -67,7 +68,8 @@ export default function StreakCalendar({
   }).length
 
   const today = new Date()
-  const todayStr = today.toISOString().split("T")[0]
+  // Fix: Use local date instead of UTC to avoid timezone issues
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
 
   const days = []
   for (let i = 0; i < firstDay; i++) {
@@ -134,9 +136,10 @@ export default function StreakCalendar({
         <div className="grid grid-cols-7 gap-0 border-collapse">
           {days.map((day, index) => {
             const dateStr = day
-              ? new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toISOString().split("T")[0]
+              ? `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
               : null
             const isToday = dateStr === todayStr
+            // Fix: Compare date strings directly to avoid time comparison issues
             const isDisabled = dateStr ? dateStr !== todayStr : true
             const isCompleted = dateStr ? streak.completedDays.includes(dateStr) : false
 
