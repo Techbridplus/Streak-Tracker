@@ -10,6 +10,8 @@ interface StreakCalendarProps {
   onResetStreak: () => void
   onStreakMilestone: () => void
   onDayCompleted?: () => void
+  isDeveloperMode: boolean
+  setIsDeveloperMode: (mode: boolean) => void
 }
 
 export default function StreakCalendar({
@@ -18,6 +20,8 @@ export default function StreakCalendar({
   onResetStreak,
   onStreakMilestone,
   onDayCompleted,
+  isDeveloperMode,
+  setIsDeveloperMode,
 }: StreakCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
 
@@ -85,20 +89,22 @@ export default function StreakCalendar({
       <div className="flex items-center justify-between border-b border-gray-200 dark:border-slate-700 pb-6">
         <button
           onClick={previousMonth}
-          className="px-6 py-2 text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100 font-semibold text-lg transition-colors"
+          className="px-3 sm:px-6 py-2 text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100 font-semibold text-lg transition-colors"
           aria-label="Previous month"
         >
-          ← Previous
+          <span className="hidden sm:inline">← Previous</span>
+          <span className="sm:hidden">←</span>
         </button>
 
-        <h2 className="text-4xl font-bold text-gray-900 dark:text-slate-100 tracking-tight">{monthName}</h2>
+        <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-slate-100 tracking-tight text-center">{monthName}</h2>
 
         <button
           onClick={nextMonth}
-          className="px-6 py-2 text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100 font-semibold text-lg transition-colors"
+          className="px-3 sm:px-6 py-2 text-gray-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-slate-100 font-semibold text-lg transition-colors"
           aria-label="Next month"
         >
-          Next →
+          <span className="hidden sm:inline">Next →</span>
+          <span className="sm:hidden">→</span>
         </button>
       </div>
 
@@ -119,13 +125,13 @@ export default function StreakCalendar({
       </div>
 
       {/* Calendar Grid - Formal layout with light/dark support */}
-      <div className="bg-white dark:bg-slate-950 rounded-lg p-8 border border-gray-200 dark:border-slate-700 shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-slate-950 rounded-lg p-4 sm:p-8 border border-gray-200 dark:border-slate-700 shadow-lg overflow-hidden">
         {/* Day headers - Formal styling */}
-        <div className="grid grid-cols-7 gap-0 mb-8 pb-6 border-b border-gray-200 dark:border-slate-700">
+        <div className="grid grid-cols-7 gap-0 mb-4 sm:mb-8 pb-3 sm:pb-6 border-b border-gray-200 dark:border-slate-700">
           {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day) => (
             <div
               key={day}
-              className="text-center text-xs font-bold text-gray-600 dark:text-slate-400 uppercase tracking-widest py-4"
+              className="text-center text-xs font-bold text-gray-600 dark:text-slate-400 uppercase tracking-widest py-2 sm:py-4"
             >
               {day}
             </div>
@@ -140,7 +146,8 @@ export default function StreakCalendar({
               : null
             const isToday = dateStr === todayStr
             // Fix: Compare date strings directly to avoid time comparison issues
-            const isDisabled = dateStr ? dateStr !== todayStr : true
+            // In developer mode, allow clicking any date; otherwise only today
+            const isDisabled = dateStr ? (!isDeveloperMode && dateStr !== todayStr) : true
             const isCompleted = dateStr ? streak.completedDays.includes(dateStr) : false
 
             return (
@@ -169,17 +176,52 @@ export default function StreakCalendar({
         </div>
       </div>
 
-      {/* Reset Button */}
-      <button
-        onClick={() => {
-          if (confirm("Are you sure you want to reset this streak? This cannot be undone.")) {
-            onResetStreak()
-          }
-        }}
-        className="w-full px-6 py-4 bg-red-100 dark:bg-red-950 hover:bg-red-200 dark:hover:bg-red-900 text-red-700 dark:text-red-200 rounded-lg transition-colors font-semibold text-base border border-red-300 dark:border-red-700"
-      >
-        Reset Streak
-      </button>
+      {/* Developer Mode Button */}
+      <div className="space-y-4">
+        <button
+          onClick={() => setIsDeveloperMode(!isDeveloperMode)}
+          className={`w-full px-4 sm:px-6 py-3 rounded-lg transition-colors font-semibold text-sm sm:text-base border ${
+            isDeveloperMode
+              ? "bg-orange-100 dark:bg-orange-950 hover:bg-orange-200 dark:hover:bg-orange-900 text-orange-700 dark:text-orange-200 border-orange-300 dark:border-orange-700"
+              : "bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 border-gray-300 dark:border-slate-600"
+          }`}
+        >
+          <span className="hidden sm:inline">
+            {isDeveloperMode ? "🔧 Developer Mode (ON)" : "🔧 Developer Mode"}
+          </span>
+          <span className="sm:hidden">
+            {isDeveloperMode ? "🔧 Dev (ON)" : "🔧 Dev"}
+          </span>
+        </button>
+
+        {/* Developer Options Panel */}
+        {isDeveloperMode && (
+          <div className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg p-4 sm:p-6 space-y-4">
+            <h3 className="text-base sm:text-lg font-bold text-orange-800 dark:text-orange-200 mb-4">
+              Developer Options
+            </h3>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  if (confirm("Are you sure you want to reset this streak? This cannot be undone.")) {
+                    onResetStreak()
+                  }
+                }}
+                className="w-full px-4 py-2 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 text-red-700 dark:text-red-200 rounded-lg transition-colors font-semibold text-sm border border-red-300 dark:border-red-700"
+              >
+                Reset Streak
+              </button>
+              
+              <div className="text-sm text-orange-700 dark:text-orange-300">
+                <p className="font-semibold mb-2">Date Customization:</p>
+                <p>In developer mode, you can click on any date to toggle it on/off, regardless of whether it's today or not.</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
     </div>
   )
 }

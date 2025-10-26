@@ -8,6 +8,7 @@ export interface Streak {
   completedDays: string[]
   currentStreak: number
   createdAt: string
+  lastModified: string
 }
 
 export interface StreaksData {
@@ -29,7 +30,18 @@ export function useStreakManager() {
     const saved = localStorage.getItem("streaksData")
     if (saved) {
       try {
-        setData(JSON.parse(saved))
+        const parsedData = JSON.parse(saved)
+        // Migration: Add lastModified to existing streaks that don't have it
+        if (parsedData.streaks && Array.isArray(parsedData.streaks)) {
+          const now = new Date().toISOString()
+          parsedData.streaks = parsedData.streaks.map((streak: any) => {
+            if (!streak.lastModified) {
+              streak.lastModified = streak.createdAt || now
+            }
+            return streak
+          })
+        }
+        setData(parsedData)
       } catch (e) {
         console.error("Failed to load streaks data:", e)
       }
@@ -45,12 +57,14 @@ export function useStreakManager() {
 
   const createStreak = useCallback(
     (name: string) => {
+      const now = new Date().toISOString()
       const newStreak: Streak = {
         id: Date.now().toString(),
         name,
         completedDays: [],
         currentStreak: 0,
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        lastModified: now,
       }
 
       const newData: StreaksData = {
@@ -78,7 +92,12 @@ export function useStreakManager() {
 
   const selectStreak = useCallback(
     (streakId: string) => {
-      const newData = { ...data, selectedStreakId: streakId }
+      const newData = { ...data }
+      const streak = newData.streaks.find((s) => s.id === streakId)
+      if (streak) {
+        streak.lastModified = new Date().toISOString()
+      }
+      newData.selectedStreakId = streakId
       saveData(newData)
     },
     [data, saveData],
@@ -99,6 +118,7 @@ export function useStreakManager() {
       }
 
       streak.currentStreak = calculateStreak(streak.completedDays)
+      streak.lastModified = new Date().toISOString()
       saveData(newData)
     },
     [data, saveData],
@@ -112,6 +132,7 @@ export function useStreakManager() {
       if (streak) {
         streak.completedDays = []
         streak.currentStreak = 0
+        streak.lastModified = new Date().toISOString()
         saveData(newData)
       }
     },

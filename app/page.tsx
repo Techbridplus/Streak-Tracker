@@ -10,6 +10,7 @@ import { useStreakManager } from "@/hooks/use-streak-manager"
 export default function Home() {
   const [isDark, setIsDark] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
+  const [isDeveloperMode, setIsDeveloperMode] = useState(false)
   const { data, isLoaded, createStreak, deleteStreak, selectStreak, toggleDay, resetStreak, getSelectedStreak } =
     useStreakManager()
 
@@ -83,6 +84,7 @@ export default function Home() {
           onSelectStreak={selectStreak}
           onCreateStreak={createStreak}
           onDeleteStreak={deleteStreak}
+          isDeveloperMode={isDeveloperMode}
         />
 
         {/* Stats */}
@@ -103,6 +105,8 @@ export default function Home() {
           }}
           onStreakMilestone={handleStreakMilestone}
           onDayCompleted={handleDayCompleted}
+          isDeveloperMode={isDeveloperMode}
+          setIsDeveloperMode={setIsDeveloperMode}
         />
       </div>
     </main>
